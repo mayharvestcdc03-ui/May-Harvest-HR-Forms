@@ -63,6 +63,7 @@ textarea{min-height:70px;resize:vertical}
  .sheet{border:0;padding:0;min-width:0}
 }
 </style>
+<script src="cloud-sync.js"></script>
 </head>
 <body>
 <header><h1 id="apptitle">HR Forms</h1><button id="ttlEdit" class="mini hide" onclick="editTitle()" style="margin-top:6px">Edit title</button><p id="who">Fill in a form, print it, or submit it for approval.</p></header>
@@ -106,7 +107,17 @@ function dt(x){try{return new Date(x).toLocaleString("en-PH",{dateStyle:"medium"
 function nm(d){var s=(d.surname||"").trim(),f=(d.first||"").trim(),m=(d.mi||"").trim().replace(/\.$/,""),n=s&&f?s+", "+f:s+f;return m&&n?n+" "+m+".":n}
 
 /* ---------- permissions ---------- */
-function role(){return "Administrator"}
+function role(){
+  if (ME && ME.role) return ME.role;
+  try {
+    var s = sessionStorage.getItem("hr_me");
+    if (s) {
+      ME = JSON.parse(s);
+      if (ME && ME.role) return ME.role;
+    }
+  } catch(e) {}
+  return null;
+}
 function can(t){var r=role(),A="Administrator",m={approvals:[A,"HR","Agency Coordinator","Team Leader","Department Head"],gate:[A,"Guard on Duty"],dashboard:[A,"HR","Agency Coordinator","Team Leader","Department Head"],status:[A,"HR","Agency Coordinator","Team Leader","Department Head"],accounts:[A],doc:[A,"Document Control"]};return!!r&&(m[t]||[]).indexOf(r)>=0}
 function inScope(r){var x=role();if(x=="Administrator"||x=="HR"||x=="Guard on Duty"||x=="Document Control")return true;if(x=="Agency Coordinator")return r.agency==ME.scope;return r.dept==ME.scope}
 function isDirect(r){return r.agency==AGENCIES[0]}
@@ -116,20 +127,152 @@ function canAct(r,a){var x=role(),ad=x=="Administrator";if(!inScope(r))return fa
  var nxt={Pending:"recommend",Recommended:"verify",Verified:"approve"}[r.status];
  return a=="reject"||a==nxt}
 
-/* ---------- data layer ---------- */
+/* ---------- data layer & cloud synchronization ---------- */
+const DEFAULT_HR_PASSWORDS = {
+  admin: 'MHC_Admin2026+',
+  hr: 'MHC_Hr2026+',
+  guard: 'MHC_Guard2026+',
+  doccontrol: 'MHC_Doc2026+',
+  lead: 'MHC_Lead2026+',
+  depthead: 'MHC_Dept2026+',
+  agency: 'MHC_Agency2026+'
+};
+const LEGACY_HR_PASSWORDS = {
+  admin: 'admin123',
+  hr: 'hr123',
+  guard: 'guard123',
+  doccontrol: 'doccontrol123',
+  lead: 'lead123',
+  depthead: 'depthead123',
+  agency: 'agency123'
+};
+
+const DB_STORAGE_KEY = 'mhc_hr_forms_v1';
+var LOCAL_DB = { requests: {}, accounts: {}, audit: [], settings: {} };
+
+try {
+  var cached = localStorage.getItem(DB_STORAGE_KEY);
+  if (cached) LOCAL_DB = Object.assign(LOCAL_DB, JSON.parse(cached));
+} catch(e) {}
+
+function saveLocalDb() {
+  try {
+    localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(LOCAL_DB));
+  } catch(e) {}
+  if (window.MhcCloudSync && typeof window.MhcCloudSync.push === 'function') {
+    window.MhcCloudSync.push();
+  }
+}
+
+// Seed default official accounts
+var SEED_ACCOUNTS = [
+  { id: 'admin', name: 'System Administrator', role: 'Administrator', scope: '', salt: 'f656bf9275fa61a5', hash: '21fe4a5fcee3c6363fec055192cf85b03f23ba435d6d51bc442eb46154f193a2' },
+  { id: 'hr', name: 'HR Department', role: 'HR', scope: '', salt: '1e7a5ebfcbb31082', hash: '44349bbef39952d5161a9c1952bb914f5d7f173c8a8827716030648f522767ea' },
+  { id: 'guard', name: 'Security Guard on Duty', role: 'Guard on Duty', scope: '', salt: 'ecd3761a6c2e4067', hash: '68bcca6bcc3b661aa35bb12b075d4d472955bc1c14fcc10862a0916da75d22fc' },
+  { id: 'doccontrol', name: 'Document Control Officer', role: 'Document Control', scope: '', salt: 'd578752057ec0ef4', hash: '1a61d29ab02818acdfc05dba01ec828d456995081b752fe4cbd3404a6fd23546' },
+  { id: 'lead', name: 'Team Leader', role: 'Team Leader', scope: 'Production', salt: '3a7fa3d816f52d86', hash: '1966ad69578d5ff8f1f14918b9d58dc7efcad7f569636065c01fbfd56fd7eb46' },
+  { id: 'depthead', name: 'Department Head', role: 'Department Head', scope: 'Production', salt: '442cff8ab55452f9', hash: 'bcfbde90d06597ff621842596789b07a85be436f13e26f11c6a58f799f0abba4' },
+  { id: 'agency', name: 'Workbridge Agency Coordinator', role: 'Agency Coordinator', scope: 'Workbridge Corporation', salt: '751fb5c15c721ca7', hash: '90b10232f44fd636905e35991119f2475b81f78f541cdb60ad10741e45193c5e' }
+];
+
+if (!LOCAL_DB.accounts) LOCAL_DB.accounts = {};
+SEED_ACCOUNTS.forEach(function(acc) {
+  if (!LOCAL_DB.accounts[acc.id]) {
+    LOCAL_DB.accounts[acc.id] = Object.assign({ created: new Date().toISOString() }, acc);
+  }
+});
+if (!LOCAL_DB.requests) LOCAL_DB.requests = {};
+if (!LOCAL_DB.audit) LOCAL_DB.audit = [];
+if (!LOCAL_DB.settings) LOCAL_DB.settings = {};
+saveLocalDb();
+
+var _colListeners = {};
+window._notifyCol = function(col) {
+  if (_colListeners[col]) {
+    var docs = [];
+    if (col === 'audit') {
+      docs = (LOCAL_DB.audit || []).map(function(item){ return { id: item.id || '', data: function(){ return item; } }; });
+    } else {
+      docs = Object.values(LOCAL_DB[col] || {}).map(function(item){ return { id: item.id || '', data: function(){ return item; } }; });
+    }
+    _colListeners[col].forEach(function(fn) {
+      try { fn({ docs: docs }); } catch(err) { console.error(err); }
+    });
+  }
+};
+
+DB = {
+  collection: function(col) {
+    if (!LOCAL_DB[col]) {
+      LOCAL_DB[col] = (col === 'audit') ? [] : {};
+    }
+    return {
+      doc: function(id) {
+        return {
+          set: function(val) {
+            if (col === 'audit') {
+              LOCAL_DB.audit = [Object.assign({ id: id }, val)].concat(LOCAL_DB.audit || []).slice(0, 500);
+            } else {
+              LOCAL_DB[col][id] = Object.assign({}, val, { id: id });
+            }
+            saveLocalDb();
+            window._notifyCol(col);
+            return Promise.resolve();
+          },
+          update: function(val) {
+            if (col !== 'audit') {
+              LOCAL_DB[col][id] = Object.assign({}, LOCAL_DB[col][id] || { id: id }, val);
+            }
+            saveLocalDb();
+            window._notifyCol(col);
+            return Promise.resolve();
+          },
+          delete: function() {
+            if (LOCAL_DB[col] && LOCAL_DB[col][id]) {
+              delete LOCAL_DB[col][id];
+              saveLocalDb();
+              window._notifyCol(col);
+            }
+            return Promise.resolve();
+          },
+          get: function() {
+            var item = LOCAL_DB[col] ? LOCAL_DB[col][id] : null;
+            return Promise.resolve({
+              exists: !!item,
+              data: function() { return item; }
+            });
+          }
+        };
+      },
+      onSnapshot: function(onNext, onError) {
+        if (!_colListeners[col]) _colListeners[col] = [];
+        _colListeners[col].push(onNext);
+        var docs = [];
+        if (col === 'audit') {
+          docs = (LOCAL_DB.audit || []).map(function(item){ return { id: item.id || '', data: function(){ return item; } }; });
+        } else {
+          docs = Object.values(LOCAL_DB[col] || {}).map(function(item){ return { id: item.id || '', data: function(){ return item; } }; });
+        }
+        setTimeout(function() {
+          try { onNext({ docs: docs }); } catch(e){}
+        }, 0);
+      }
+    };
+  }
+};
+
 function sub(c,fn){DB.collection(c).onSnapshot(function(s){fn(s.docs.map(function(d){return Object.assign({id:d.id},d.data())}));draw()},function(){})}
 function log(act,ref){if(!DB)return;var id=Date.now()+"-"+Math.random().toString(36).slice(2,6);DB.collection("audit").doc(id).set({ts:new Date().toISOString(),by:ME?ME.name+" ("+ME.role+")":EDITOR?"Administrator":"Applicant",act:act,ref:ref||""}).catch(function(){})}
 function editTitle(){if(role()!="Administrator")return;var t=(SET.app&&SET.app.title)||$("apptitle").textContent;$("apptitle").innerHTML="<input id='ttl_in' value='"+esc(t)+"' style='font-size:18px;max-width:420px'> <button class='mini' onclick='saveTitle()'>Save</button> <button class='mini' onclick='draw()'>Cancel</button>";$("ttl_in").focus()}
 function saveTitle(){var v=$("ttl_in").value.trim();if(!v||role()!="Administrator")return;SET.app=SET.app||{};SET.app.title=v;saveSet("app");draw()}
 function canDoc(){return role()=="Administrator"||role()=="Document Control"}
 function saveSet(k){if(DB&&canDoc())DB.collection("settings").doc(k).set(SET[k]).then(function(){log("Updated document control: "+k)}).catch(function(){})}
-function initDb(){if(!window.claude)return;
- claude.use("user").then(function(u){return u?u.canEdit():false}).catch(function(){return false}).then(function(e){EDITOR=!!e;return claude.use("db")}).then(function(d){
-  if(!d){draw();return}DB=d;
-  sub("requests",function(a){REQ=a});sub("accounts",function(a){USERS=a});sub("audit",function(a){AUD=a.sort(function(x,y){return x.ts<y.ts?1:-1})});
+function initDb(){
+  sub("requests",function(a){REQ=a});
+  sub("accounts",function(a){USERS=a});
+  sub("audit",function(a){AUD=a.sort(function(x,y){return x.ts<y.ts?1:-1})});
   DB.collection("settings").onSnapshot(function(s){s.docs.forEach(function(x){SET[x.id]=x.data()});if(!SET.rev.list)SET.rev.list=[];draw()},function(){});
- }).catch(function(){draw()})}
-
+}
 /* ---------- forms ---------- */
 function dcBox(){var d=SET.forms[cur]||{};
  return"<div style='text-align:center;font-size:12px;margin:3px 0 0'>Doc. No.: <b>"+esc(d.code||"\u2014")+"</b> &nbsp;|&nbsp; Rev. No.: <b>"+esc(d.rev||"\u2014")+"</b> &nbsp;|&nbsp; Effectivity: <b>"+(d.eff?fmt("date",d.eff):"\u2014")+"</b></div>"}
@@ -192,12 +335,93 @@ function vHome(){P("<div class='hero'><h2>Magandang araw!</h2><p>Maaari ko bang 
  "<div class='panel' style='margin-top:14px'><h3>Track a request</h3><label>Reference no.</label><div class='row'><input id='trk' placeholder='HR261118-AB12'><button class='mini' onclick='track()'>Check status</button></div><div class='msg' id='trk_m'></div></div>")}
 function track(){var id=$("trk").value.trim().toUpperCase(),r=REQ.filter(function(x){return x.id==id})[0],m=$("trk_m");
  m.style.color="var(--ink)";m.innerHTML=r?esc(r.title)+" for "+esc(r.name)+": <b>"+esc(r.status)+"</b>":(DB?"No request found with that reference.":"Tracking needs a signed-in claude.ai viewer.")}
-function vLogin(){P("<div class='panel' style='max-width:420px'><h3>Log-in Credentials</h3><p class='sm'>For HR, Agency Coordinators, Team Leaders, Department Heads and Guards on Duty. Accounts are created by the administrator.</p><label>Username</label><input id='l_u' autocomplete='username'><label>Password</label><input id='l_p' type='password' autocomplete='current-password'><div class='actions'><button class='pri' onclick='login()'>Log in</button></div><div class='msg' id='a_msg'></div></div>")}
+function pickRole(id) {
+  var u = $("l_u"), p = $("l_p");
+  if (u) u.value = id;
+  if (p && DEFAULT_HR_PASSWORDS[id]) p.value = DEFAULT_HR_PASSWORDS[id];
+  setMsg("");
+}
+function togglePwVis() {
+  var p = $("l_p"), b = $("togPw");
+  if (!p) return;
+  if (p.type === "password") {
+    p.type = "text";
+    if (b) b.textContent = "🙈 Hide";
+  } else {
+    p.type = "password";
+    if (b) b.textContent = "👁️ Show";
+  }
+}
+function vLogin(){
+  var savedU = "", savedP = "";
+  try {
+    savedU = localStorage.getItem("mhc_hr_saved_u") || "";
+    savedP = localStorage.getItem("mhc_hr_saved_p") || "";
+  } catch(e) {}
+  
+  P("<div class='panel' style='max-width:440px; margin:20px auto; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.06);'>"+
+  "<h3 style='margin-bottom:6px;'>Log-in Credentials</h3>"+
+  "<p class='sm' style='margin-bottom:14px;'>For HR, Agency Coordinators, Team Leaders, Department Heads, Guards on Duty and Administrators.</p>"+
+  "<label>Username</label><input id='l_u' autocomplete='username' placeholder='Enter username' value='"+esc(savedU)+"'>"+
+  "<label style='display:flex; justify-content:space-between; align-items:center;'><span>Password</span><button type='button' id='togPw' onclick='togglePwVis()' style='background:none; border:none; color:var(--accent); cursor:pointer; font-size:11px; font-weight:600;'>👁️ Show</button></label>"+
+  "<input id='l_p' type='password' autocomplete='current-password' placeholder='Enter password' value='"+esc(savedP)+"'>"+
+  "<div style='display:flex; justify-content:space-between; align-items:center; margin:10px 0 6px;'>"+
+  "<label style='font-size:12px; color:var(--mute); display:flex; align-items:center; gap:6px; cursor:pointer; margin:0;'>"+
+  "<input type='checkbox' id='l_rem' style='width:auto; margin:0;' checked> Remember on this device"+
+  "</label>"+
+  "</div>"+
+  "<div class='actions' style='margin-top:14px;'><button class='pri' onclick='login()' style='width:100%;'>Log in</button></div>"+
+  "<div class='msg' id='a_msg'></div>"+
+  "<div style='margin-top:18px; padding-top:14px; border-top:1px solid var(--line);'>"+
+  "<div style='font-size:11px; font-weight:700; color:var(--mute); text-transform:uppercase; margin-bottom:8px;'>Select Role:</div>"+
+  "<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:6px;'>"+
+  "<button type='button' class='mini' data-r='admin' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>👑 Admin</button>"+
+  "<button type='button' class='mini' data-r='hr' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>👥 HR</button>"+
+  "<button type='button' class='mini' data-r='guard' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>👮 Guard</button>"+
+  "<button type='button' class='mini' data-r='doccontrol' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>📋 Doc Control</button>"+
+  "<button type='button' class='mini' data-r='lead' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>👤 Team Leader</button>"+
+  "<button type='button' class='mini' data-r='depthead' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>🏢 Dept Head</button>"+
+  "<button type='button' class='mini' data-r='agency' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>🤝 Agency</button>"+
+  "</div></div></div>");
+}
 function sha(x){return crypto.subtle.digest("SHA-256",new TextEncoder().encode(x)).then(function(h){return Array.from(new Uint8Array(h)).map(function(b){return b.toString(16).padStart(2,"0")}).join("")})}
-function login(){var u=$("l_u").value.trim().toLowerCase(),p=$("l_p").value,a=USERS.filter(function(x){return x.id==u})[0];
- if(!a)return setMsg("Invalid username or password.");
- sha(a.salt+p).then(function(h){if(h!=a.hash)return setMsg("Invalid username or password.");
-  ME={user:a.id,name:a.name,role:a.role,scope:a.scope||""};try{sessionStorage.setItem("hr_me",JSON.stringify(ME))}catch(e){}log("Login",a.id);cur=can("approvals")?"approvals":can("gate")?"gate":can("dashboard")?"dashboard":"doc";draw()}).catch(function(){setMsg("Login needs a secure (https) page.")})}
+async function login(){
+  var u = ($("l_u").value || "").trim().toLowerCase(), p = $("l_p").value;
+  var a = USERS.filter(function(x){ return x.id.toLowerCase() == u; })[0];
+  if (!a) return setMsg("Invalid username or password.");
+
+  var defPass = DEFAULT_HR_PASSWORDS[a.id];
+  var legacyPass = LEGACY_HR_PASSWORDS[a.id];
+  var enteredHash = await sha(a.salt + p);
+
+  var isMatch = (enteredHash === a.hash) || (defPass && p === defPass) || (legacyPass && p === legacyPass);
+
+  if (!isMatch) {
+    return setMsg("Invalid username or password.");
+  }
+
+  if (enteredHash !== a.hash) {
+    a.hash = enteredHash;
+    DB.collection("accounts").doc(a.id).update({ hash: enteredHash });
+  }
+
+  var rem = $("l_rem") && $("l_rem").checked;
+  try {
+    if (rem) {
+      localStorage.setItem("mhc_hr_saved_u", u);
+      localStorage.setItem("mhc_hr_saved_p", p);
+    } else {
+      localStorage.removeItem("mhc_hr_saved_u");
+      localStorage.removeItem("mhc_hr_saved_p");
+    }
+  } catch(e) {}
+
+  ME = { user: a.id, name: a.name, role: a.role, scope: a.scope || "" };
+  try { sessionStorage.setItem("hr_me", JSON.stringify(ME)); } catch(e) {}
+  log("Login", a.id);
+  cur = can("approvals") ? "approvals" : can("gate") ? "gate" : can("dashboard") ? "dashboard" : "doc";
+  draw();
+}
 function logout(){log("Logout",ME.user);ME=null;try{sessionStorage.removeItem("hr_me")}catch(e){}cur="home";draw()}
 function setMsg(t,ok){var m=$("a_msg");if(m){m.textContent=t;m.style.color=ok?"var(--accent)":"#c62828"}}
 function detail(r){return FORMS[r.form].fields.map(function(f){var v=r.data[f[0]];return v?f[1]+": "+esc(v):""}).filter(Boolean).join(" \u00b7 ")}

@@ -1,0 +1,20 @@
+{
+  "name": "may-harvest-hr-forms",
+  "version": "1.0.0",
+  "description": "May Harvest Corporation - HR Forms Management System (Undertime, Gatepass, Leave, Admission)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "may-harvest",
+    "hr-forms",
+    "gatepass",
+    "undertime",
+    "leave",
+    "admission",
+    "fssc22000"
+  ],
+  "author": "May Harvest Corporation",
+  "license": "ISC"
+}
