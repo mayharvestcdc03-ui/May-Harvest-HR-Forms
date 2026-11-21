@@ -107,6 +107,17 @@ function dt(x){try{return new Date(x).toLocaleString("en-PH",{dateStyle:"medium"
 function nm(d){var s=(d.surname||"").trim(),f=(d.first||"").trim(),m=(d.mi||"").trim().replace(/\.$/,""),n=s&&f?s+", "+f:s+f;return m&&n?n+" "+m+".":n}
 
 /* ---------- permissions ---------- */
+var ROLES = [
+  "Administrator",
+  "HR",
+  "Document Control",
+  "Operations Manager",
+  "Department Head",
+  "Team Leader",
+  "Agency Coordinator",
+  "Guard on Duty"
+];
+
 function role(){
   if (ME && ME.role) return ME.role;
   try {
@@ -118,33 +129,89 @@ function role(){
   } catch(e) {}
   return null;
 }
-function can(t){var r=role(),A="Administrator",m={approvals:[A,"HR","Agency Coordinator","Team Leader","Department Head"],gate:[A,"Guard on Duty"],dashboard:[A,"HR","Agency Coordinator","Team Leader","Department Head"],status:[A,"HR","Agency Coordinator","Team Leader","Department Head"],accounts:[A],doc:[A,"Document Control"]};return!!r&&(m[t]||[]).indexOf(r)>=0}
-function inScope(r){var x=role();if(x=="Administrator"||x=="HR"||x=="Guard on Duty"||x=="Document Control")return true;if(x=="Agency Coordinator")return r.agency==ME.scope;return r.dept==ME.scope}
-function isDirect(r){return r.agency==AGENCIES[0]}
-function canAct(r,a){var x=role(),ad=x=="Administrator";if(!inScope(r))return false;
- var who={Pending:ad||x=="Team Leader",Recommended:ad||x=="Department Head",Verified:ad||x=="Agency Coordinator"||x=="HR"}[r.status];
- if(!who)return false;
- var nxt={Pending:"recommend",Recommended:"verify",Verified:"approve"}[r.status];
- return a=="reject"||a==nxt}
+
+function can(t){
+  var r = role();
+  if (!r) return false;
+  if (r === "Administrator") return true;
+  if (r === "Document Control") return t === "doc";
+  if (r === "Guard on Duty") return t === "gate";
+  
+  if (r === "HR") {
+    // All access except Document Control and Accounts; Viewing Guard Gate
+    return ["approvals", "gate", "dashboard", "status"].indexOf(t) >= 0;
+  }
+  
+  if (r === "Operations Manager") {
+    // Viewing only: Dashboard, Guard Gate. Access: Home, Approvals, Status
+    return ["approvals", "gate", "dashboard", "status"].indexOf(t) >= 0;
+  }
+  
+  if (r === "Department Head" || r === "Team Leader" || r === "Agency Coordinator") {
+    // Respective dept/agency only
+    return ["approvals", "gate", "dashboard", "status"].indexOf(t) >= 0;
+  }
+  
+  return false;
+}
+
+function inScope(r){
+  var x = role();
+  if (!x || x === "Administrator" || x === "HR" || x === "Operations Manager" || x === "Guard on Duty" || x === "Document Control") return true;
+  if (x === "Agency Coordinator") return r.agency === (ME ? ME.scope : "");
+  return r.dept === (ME ? ME.scope : "");
+}
+
+function isDirect(r){ return r.agency === AGENCIES[0]; }
+
+function canStampGate(){
+  var r = role();
+  return r === "Administrator" || r === "Guard on Duty";
+}
+
+function canAct(r, a){
+  var x = role();
+  if (!x) return false;
+  var ad = (x === "Administrator" || x === "Operations Manager");
+  if (!inScope(r) && !ad) return false;
+
+  var who = {
+    Pending: ad || x === "Team Leader",
+    Recommended: ad || x === "Department Head",
+    Verified: ad || x === "Agency Coordinator" || x === "HR"
+  }[r.status];
+  
+  if (!who) return false;
+  var nxt = {
+    Pending: "recommend",
+    Recommended: "verify",
+    Verified: "approve"
+  }[r.status];
+  
+  return a === "reject" || a === nxt;
+}
 
 /* ---------- data layer & cloud synchronization ---------- */
 const DEFAULT_HR_PASSWORDS = {
   admin: 'MHC_Admin2026+',
   hr: 'MHC_Hr2026+',
-  guard: 'MHC_Guard2026+',
   doccontrol: 'MHC_Doc2026+',
-  lead: 'MHC_Lead2026+',
+  opsmanager: 'MHC_Ops2026+',
   depthead: 'MHC_Dept2026+',
-  agency: 'MHC_Agency2026+'
+  lead: 'MHC_Lead2026+',
+  agency: 'MHC_Agency2026+',
+  guard: 'MHC_Guard2026+'
 };
+
 const LEGACY_HR_PASSWORDS = {
   admin: 'admin123',
   hr: 'hr123',
-  guard: 'guard123',
   doccontrol: 'doccontrol123',
-  lead: 'lead123',
+  opsmanager: 'opsmanager123',
   depthead: 'depthead123',
-  agency: 'agency123'
+  lead: 'lead123',
+  agency: 'agency123',
+  guard: 'guard123'
 };
 
 const DB_STORAGE_KEY = 'mhc_hr_forms_v1';
@@ -164,15 +231,16 @@ function saveLocalDb() {
   }
 }
 
-// Seed default official accounts
+// Seed default official role accounts
 var SEED_ACCOUNTS = [
-  { id: 'admin', name: 'System Administrator', role: 'Administrator', scope: '', salt: 'f656bf9275fa61a5', hash: '21fe4a5fcee3c6363fec055192cf85b03f23ba435d6d51bc442eb46154f193a2' },
-  { id: 'hr', name: 'HR Department', role: 'HR', scope: '', salt: '1e7a5ebfcbb31082', hash: '44349bbef39952d5161a9c1952bb914f5d7f173c8a8827716030648f522767ea' },
-  { id: 'guard', name: 'Security Guard on Duty', role: 'Guard on Duty', scope: '', salt: 'ecd3761a6c2e4067', hash: '68bcca6bcc3b661aa35bb12b075d4d472955bc1c14fcc10862a0916da75d22fc' },
-  { id: 'doccontrol', name: 'Document Control Officer', role: 'Document Control', scope: '', salt: 'd578752057ec0ef4', hash: '1a61d29ab02818acdfc05dba01ec828d456995081b752fe4cbd3404a6fd23546' },
-  { id: 'lead', name: 'Team Leader', role: 'Team Leader', scope: 'Production', salt: '3a7fa3d816f52d86', hash: '1966ad69578d5ff8f1f14918b9d58dc7efcad7f569636065c01fbfd56fd7eb46' },
-  { id: 'depthead', name: 'Department Head', role: 'Department Head', scope: 'Production', salt: '442cff8ab55452f9', hash: 'bcfbde90d06597ff621842596789b07a85be436f13e26f11c6a58f799f0abba4' },
-  { id: 'agency', name: 'Workbridge Agency Coordinator', role: 'Agency Coordinator', scope: 'Workbridge Corporation', salt: '751fb5c15c721ca7', hash: '90b10232f44fd636905e35991119f2475b81f78f541cdb60ad10741e45193c5e' }
+  { id: 'admin', name: 'System Administrator', role: 'Administrator', scope: '', salt: 'a7d89d6edec53909', hash: '607105fe5569ba3c1686162925e1e6d8427e3da2c3783a50e61323d2826f811b' },
+  { id: 'hr', name: 'HR Department', role: 'HR', scope: '', salt: '6b42caef099d2b83', hash: '98e179056b9d7949f43fd29157328ea020efca1cd04a5508e478970ccf6a9116' },
+  { id: 'doccontrol', name: 'Document Control Officer', role: 'Document Control', scope: '', salt: 'e20349742ca1b4b6', hash: '45f5fa7704d117cfaf4891931d12040508195f2609ecc9b098588e0712eacd54' },
+  { id: 'opsmanager', name: 'Operations Manager', role: 'Operations Manager', scope: '', salt: '0f9f7ee77cf6bed6', hash: 'd8c830d25ed70b4547fb5937d6914e7d705d83634a3528086c3c0ff0b6347ca1' },
+  { id: 'depthead', name: 'Department Head', role: 'Department Head', scope: 'Production', salt: '903266d0790479ef', hash: '026e254b4ea3331259aa91f4283ba32916b79d80e04d0b3089ea5a451a7c598c' },
+  { id: 'lead', name: 'Team Leader', role: 'Team Leader', scope: 'Production', salt: '4e8911ce6b9455f5', hash: 'b2386e010a561486f6b31a8675fb71f1deb663df49f909f60493b2dca5963f9b' },
+  { id: 'agency', name: 'Workbridge Agency Coordinator', role: 'Agency Coordinator', scope: 'Workbridge Corporation', salt: '132a9b7586a08901', hash: 'a0fa4a17e203083ded53d9d869a8f7ba3db31c2d6fcb4a73b3e31f7f18efc5f0' },
+  { id: 'guard', name: 'Security Guard on Duty', role: 'Guard on Duty', scope: '', salt: '09ea856ae5fc4120', hash: '840f7816b48910f89861712b410827083d480cea78eeff343642b887db3d9a6b' }
 ];
 
 if (!LOCAL_DB.accounts) LOCAL_DB.accounts = {};
@@ -310,10 +378,35 @@ function submitReq(){
 function openReq(id){var r=REQ.filter(function(x){return x.id==id})[0];if(!r)return;data=Object.assign({},r.data);curReq=r;cur=r.form;draw()}
 
 /* ---------- views ---------- */
-function tabsHtml(){var t=[["home","Home"]].concat(FK.map(function(k){return[k,FORMS[k].label]}));
- [["approvals","Approvals"],["gate","Guard Gate"],["dashboard","Dashboard"],["status","Status"],["accounts","Accounts"],["doc","Document Control"]].forEach(function(x){if(can(x[0]))t.push(x)});if(ME)t.push(["pw","Change Password"]);
- return t.map(function(x){return"<button class='"+(x[0]==cur?"on":"")+"' onclick=\"go('"+x[0]+"')\">"+x[1]+"</button>"}).join("")+
-  (ME?"<button class='r' onclick=\"logout()\">Log out ("+esc(ME.name)+")</button>":"")}
+function tabsHtml(){
+  var r = role();
+  var t = [];
+  
+  if (r === "Document Control") {
+    t = [["doc", "Document Control"]];
+    if (ME) t.push(["pw", "Change Password"]);
+    return t.map(function(x){return"<button class='"+(x[0]==cur?"on":"")+"' onclick=\"go('"+x[0]+"')\">"+x[1]+"</button>"}).join("")+
+      (ME?"<button class='r' onclick=\"logout()\">Log out ("+esc(ME.name)+")</button>":"");
+  }
+
+  if (r === "Guard on Duty") {
+    t = [["gate", "Guard Gate"]];
+    if (ME) t.push(["pw", "Change Password"]);
+    return t.map(function(x){return"<button class='"+(x[0]==cur?"on":"")+"' onclick=\"go('"+x[0]+"')\">"+x[1]+"</button>"}).join("")+
+      (ME?"<button class='r' onclick=\"logout()\">Log out ("+esc(ME.name)+")</button>":"");
+  }
+
+  // Employees (Logged out) and full access staff
+  t = [["home", "Home"]].concat(FK.map(function(k){ return [k, FORMS[k].label]; }));
+  
+  [["approvals","Approvals"],["gate","Guard Gate"],["dashboard","Dashboard"],["status","Status"],["accounts","Accounts"],["doc","Document Control"]].forEach(function(x){
+    if (can(x[0])) t.push(x);
+  });
+  
+  if (ME) t.push(["pw", "Change Password"]);
+  return t.map(function(x){return"<button class='"+(x[0]==cur?"on":"")+"' onclick=\"go('"+x[0]+"')\">"+x[1]+"</button>"}).join("")+
+    (ME?"<button class='r' onclick=\"logout()\">Log out ("+esc(ME.name)+")</button>":"");
+}
 function go(k){if(FORMS[k]&&cur!=k){data={agency:data.agency};curReq=null}cur=k;PEND=null;draw()}
 function draw(){
  var s=SET.app||{},ttl=s.title||"HR Forms \u2014 Agency Employees";$("apptitle").textContent=ttl;document.title=ttl;$("ttlEdit").className="mini"+(role()=="Administrator"?"":" hide");
@@ -361,7 +454,7 @@ function vLogin(){
   
   P("<div class='panel' style='max-width:440px; margin:20px auto; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.06);'>"+
   "<h3 style='margin-bottom:6px;'>Log-in Credentials</h3>"+
-  "<p class='sm' style='margin-bottom:14px;'>For HR, Agency Coordinators, Team Leaders, Department Heads, Guards on Duty and Administrators.</p>"+
+  "<p class='sm' style='margin-bottom:14px;'>For HR, Operations Manager, Dept Heads, Team Leaders, Agency Coordinators, Guards, and Administrators.</p>"+
   "<label>Username</label><input id='l_u' autocomplete='username' placeholder='Enter username' value='"+esc(savedU)+"'>"+
   "<label style='display:flex; justify-content:space-between; align-items:center;'><span>Password</span><button type='button' id='togPw' onclick='togglePwVis()' style='background:none; border:none; color:var(--accent); cursor:pointer; font-size:11px; font-weight:600;'>👁️ Show</button></label>"+
   "<input id='l_p' type='password' autocomplete='current-password' placeholder='Enter password' value='"+esc(savedP)+"'>"+
@@ -377,11 +470,12 @@ function vLogin(){
   "<div style='display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:6px;'>"+
   "<button type='button' class='mini' data-r='admin' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>👑 Admin</button>"+
   "<button type='button' class='mini' data-r='hr' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>👥 HR</button>"+
-  "<button type='button' class='mini' data-r='guard' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>👮 Guard</button>"+
   "<button type='button' class='mini' data-r='doccontrol' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>📋 Doc Control</button>"+
-  "<button type='button' class='mini' data-r='lead' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>👤 Team Leader</button>"+
+  "<button type='button' class='mini' data-r='opsmanager' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>⚙️ Ops Manager</button>"+
   "<button type='button' class='mini' data-r='depthead' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>🏢 Dept Head</button>"+
+  "<button type='button' class='mini' data-r='lead' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>👤 Team Leader</button>"+
   "<button type='button' class='mini' data-r='agency' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>🤝 Agency</button>"+
+  "<button type='button' class='mini' data-r='guard' onclick='pickRole(this.dataset.r)' style='padding:8px 6px; font-weight:600; text-align:center;'>👮 Guard</button>"+
   "</div></div></div>");
 }
 function sha(x){return crypto.subtle.digest("SHA-256",new TextEncoder().encode(x)).then(function(h){return Array.from(new Uint8Array(h)).map(function(b){return b.toString(16).padStart(2,"0")}).join("")})}
@@ -419,7 +513,7 @@ async function login(){
   ME = { user: a.id, name: a.name, role: a.role, scope: a.scope || "" };
   try { sessionStorage.setItem("hr_me", JSON.stringify(ME)); } catch(e) {}
   log("Login", a.id);
-  cur = can("approvals") ? "approvals" : can("gate") ? "gate" : can("dashboard") ? "dashboard" : "doc";
+  cur = (a.role === "Document Control") ? "doc" : (a.role === "Guard on Duty") ? "gate" : can("approvals") ? "approvals" : can("dashboard") ? "dashboard" : "gate";
   draw();
 }
 function logout(){log("Logout",ME.user);ME=null;try{sessionStorage.removeItem("hr_me")}catch(e){}cur="home";draw()}
@@ -442,7 +536,7 @@ function act(id,a){var r=REQ.filter(function(x){return x.id==id})[0],k={Recommen
  if(a=="Approved")u.status=finalStatus(r.form,h);
  DB.collection("requests").doc(id).update(u).then(function(){log(a+" "+r.title+(u.afterHours?" (after-hours: allowed to exit)":""),id)}).catch(function(){alert("Could not save. Please try again.")})}
 function vGate(){var l=REQ.filter(function(r){return canGate(r)}).sort(function(a,b){return a.filed<b.filed?1:-1});
- function cell(r,k,lab){var h=(r.history||[]).filter(function(x){return x.act==k})[0];return h?"<b>"+dt(h.ts)+"</b><div class='sm'>"+esc(h.by)+"</div>":"<button class='mini' onclick=\"gAct('"+r.id+"')\">"+lab+"</button>"}
+ function cell(r,k,lab){var h=(r.history||[]).filter(function(x){return x.act==k})[0];if(h)return"<b>"+dt(h.ts)+"</b><div class='sm'>"+esc(h.by)+"</div>";if(!canStampGate())return"<span class='sm' style='color:var(--mute)'>Awaiting guard stamp</span>";return"<button class='mini' onclick=\"gAct('"+r.id+"')\">"+lab+"</button>"}
  P("<div class='panel wrap'><h3>Guard on Duty \u2014 entry / exit</h3><p class='sm'>Mga fully approved na request lang ang lalabas dito. I-click ang button para ma-stamp ang kasalukuyang petsa at oras; ito na ang magiging actual time at mag-a-update sa status ng application. Hindi ipinapakita dito ang mga Leave form.</p><p class='sm'>Undertime at Gate Pass na na-recommend ng Team Leader pagkatapos ng 5:00 PM o bago mag-8:00 AM ay papahintulutan lumabas; ang verification at approval ay gagawin sa loob ng 8:00 AM\u20135:00 PM.</p><table><tr><th>Ref</th><th>Request</th><th>Employee</th><th>Dept / Agency</th><th>Status</th><th>Exit</th><th>Entry / Return</th><th></th></tr>"+
  (l.map(function(r){var ex=r.form=="admission"?"<span class='sm'>n/a</span>":cell(r,"Exit permitted","Stamp exit"),en=r.form=="undertime"?"<span class='sm'>n/a</span>":r.form=="admission"?cell(r,"Entry permitted","Stamp entry"):!hasAct(r,"Exit permitted")?"<span class='sm'>after exit</span>":cell(r,"Return confirmed","Stamp return");
   return"<tr><td>"+esc(r.id)+"</td><td><b>"+esc(r.title)+"</b><div class='sm'>"+detail(r)+"</div></td><td>"+esc(r.name)+"</td><td>"+esc(r.dept)+"<div class='sm'>"+esc(r.agency)+"</div></td><td><span class='bd' style='border-color:"+SCOL[r.status]+"'>"+esc(r.status)+"</span>"+flag(r)+"</td><td>"+ex+"</td><td>"+en+"</td><td><button class='mini' onclick=\"openReq('"+r.id+"')\">View / Print</button></td></tr>"}).join("")||"<tr><td colspan='8' class='sm'>No approved requests yet.</td></tr>")+"</table></div>")}
