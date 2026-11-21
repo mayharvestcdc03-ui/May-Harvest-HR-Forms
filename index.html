@@ -429,10 +429,26 @@ function vHome(){P("<div class='hero'><h2>Magandang araw!</h2><p>Maaari ko bang 
 function track(){var id=$("trk").value.trim().toUpperCase(),r=REQ.filter(function(x){return x.id==id})[0],m=$("trk_m");
  m.style.color="var(--ink)";m.innerHTML=r?esc(r.title)+" for "+esc(r.name)+": <b>"+esc(r.status)+"</b>":(DB?"No request found with that reference.":"Tracking needs a signed-in claude.ai viewer.")}
 function pickRole(id) {
-  var u = $("l_u"), p = $("l_p");
+  var u = $("l_u"), p = $("l_p"), rem = $("l_rem");
   if (u) u.value = id;
-  if (p && DEFAULT_HR_PASSWORDS[id]) p.value = DEFAULT_HR_PASSWORDS[id];
   setMsg("");
+  
+  // Check if device has remembered password for this specific user
+  var remembered = {};
+  try {
+    remembered = JSON.parse(localStorage.getItem("mhc_hr_remembered_pw") || "{}");
+  } catch(e) {}
+  
+  if (p) {
+    if (remembered && remembered[id]) {
+      p.value = remembered[id];
+      if (rem) rem.checked = true;
+    } else {
+      p.value = "";
+      p.placeholder = "Enter password for " + id;
+      p.focus();
+    }
+  }
 }
 function togglePwVis() {
   var p = $("l_p"), b = $("togPw");
@@ -446,21 +462,24 @@ function togglePwVis() {
   }
 }
 function vLogin(){
-  var savedU = "", savedP = "";
+  var lastU = "", lastP = "";
   try {
-    savedU = localStorage.getItem("mhc_hr_saved_u") || "";
-    savedP = localStorage.getItem("mhc_hr_saved_p") || "";
+    lastU = localStorage.getItem("mhc_hr_last_u") || "";
+    var remembered = JSON.parse(localStorage.getItem("mhc_hr_remembered_pw") || "{}");
+    if (lastU && remembered[lastU]) {
+      lastP = remembered[lastU];
+    }
   } catch(e) {}
   
   P("<div class='panel' style='max-width:440px; margin:20px auto; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.06);'>"+
   "<h3 style='margin-bottom:6px;'>Log-in Credentials</h3>"+
-  "<p class='sm' style='margin-bottom:14px;'>For HR, Operations Manager, Dept Heads, Team Leaders, Agency Coordinators, Guards, and Administrators.</p>"+
-  "<label>Username</label><input id='l_u' autocomplete='username' placeholder='Enter username' value='"+esc(savedU)+"'>"+
+  "<p class='sm' style='margin-bottom:14px;'>Piliin ang inyong role sa ibaba at i-type ang inyong password. Maaari ring lagyan ng tsek ang <b>Remember password</b> para sa device na ito.</p>"+
+  "<label>Username</label><input id='l_u' autocomplete='username' placeholder='Piliin ang role sa ibaba o i-type ang username' value='"+esc(lastU)+"'>"+
   "<label style='display:flex; justify-content:space-between; align-items:center;'><span>Password</span><button type='button' id='togPw' onclick='togglePwVis()' style='background:none; border:none; color:var(--accent); cursor:pointer; font-size:11px; font-weight:600;'>👁️ Show</button></label>"+
-  "<input id='l_p' type='password' autocomplete='current-password' placeholder='Enter password' value='"+esc(savedP)+"'>"+
+  "<input id='l_p' type='password' autocomplete='current-password' placeholder='I-type ang password dito' value='"+esc(lastP)+"'>"+
   "<div style='display:flex; justify-content:space-between; align-items:center; margin:10px 0 6px;'>"+
   "<label style='font-size:12px; color:var(--mute); display:flex; align-items:center; gap:6px; cursor:pointer; margin:0;'>"+
-  "<input type='checkbox' id='l_rem' style='width:auto; margin:0;' checked> Remember on this device"+
+  "<input type='checkbox' id='l_rem' style='width:auto; margin:0;' checked> Remember password on this device"+
   "</label>"+
   "</div>"+
   "<div class='actions' style='margin-top:14px;'><button class='pri' onclick='login()' style='width:100%;'>Log in</button></div>"+
@@ -484,6 +503,12 @@ async function login(){
   var a = USERS.filter(function(x){ return x.id.toLowerCase() == u; })[0];
   if (!a) return setMsg("Invalid username or password.");
 
+  if (!p) {
+    setMsg("Please enter your password.");
+    if ($("l_p")) $("l_p").focus();
+    return;
+  }
+
   var defPass = DEFAULT_HR_PASSWORDS[a.id];
   var legacyPass = LEGACY_HR_PASSWORDS[a.id];
   var enteredHash = await sha(a.salt + p);
@@ -499,15 +524,17 @@ async function login(){
     DB.collection("accounts").doc(a.id).update({ hash: enteredHash });
   }
 
+  // Save or remove remembered password on device
   var rem = $("l_rem") && $("l_rem").checked;
   try {
+    var remembered = JSON.parse(localStorage.getItem("mhc_hr_remembered_pw") || "{}");
     if (rem) {
-      localStorage.setItem("mhc_hr_saved_u", u);
-      localStorage.setItem("mhc_hr_saved_p", p);
+      remembered[u] = p;
+      localStorage.setItem("mhc_hr_last_u", u);
     } else {
-      localStorage.removeItem("mhc_hr_saved_u");
-      localStorage.removeItem("mhc_hr_saved_p");
+      delete remembered[u];
     }
+    localStorage.setItem("mhc_hr_remembered_pw", JSON.stringify(remembered));
   } catch(e) {}
 
   ME = { user: a.id, name: a.name, role: a.role, scope: a.scope || "" };
