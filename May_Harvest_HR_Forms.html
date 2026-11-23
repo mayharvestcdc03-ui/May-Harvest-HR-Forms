@@ -87,7 +87,21 @@ var FORMS={
  undertime:{label:"Undertime",title:"Undertime Request Form",fields:[["sched","Scheduled time out","time"],["hours","Total undertime (hrs/mins)","text"],["reason","Reason","textarea"]],sigs:["Employee","Team Leader (Recommending)","Dept. Head (Verifying)","Agency Coord. / HR (Approving)"]},
  gatepass:{label:"Gatepass",title:"Employee Gate Pass",fields:[["ptype","Type","select",["Personal","Official Business"]],["back","Expected time back","time"],["dest","Destination","text"],["items","Purpose / items brought out","textarea"]],sigs:["Employee","Team Leader (Recommending)","Dept. Head (Verifying)","Agency Coord. / HR (Approving)"]},
  leave:{label:"Leave Form",title:"Leave Application Form",fields:[["ltype","Leave type","select",["Vacation","Sick","Emergency","Maternity / Paternity","Other (please specify)"]],["ltypeOther","Please specify leave type","text"],["from","From","date"],["to","To","date"],["days","Number of days","text"],["contact","Contact number while on leave","text"],["reason","Reason","textarea"]],sigs:["Employee","Team Leader (Recommending)","Dept. Head (Verifying)","Agency Coord. / HR (Approving)"]},
- admission:{label:"Admission",title:"Admission Slip",fields:[["atype","Reason for admission","select",["Late arrival","Absent / Returning to work","Returning from leave","Forgot ID / Uniform","Other"]],["absent","Date(s) absent (if any)","text"],["reason","Explanation","textarea"],["medCert","Medical Certificate / Fit to Work","select",["Not Applicable","With Medical Certificate (Attached)","Presented to Company Nurse / Clinic","To Follow / Pending Clearance"]],["medClinic","Clinic / Attending Physician / Remarks (optional)","text"],["medFile","Attachment (Medical Certificate - PDF / Larawan)","file"]],sigs:["Employee","Team Leader (Recommending)","Dept. Head (Verifying)","Agency Coord. / HR (Approving)"]}
+ admission:{label:"Admission",title:"Admission Slip",fields:[["atype","Reason for admission","select",["Late arrival","Absent / Returning to work","Returning from leave","Forgot ID / Uniform","Other"]],["absent","Date(s) absent (if any)","text"],["reason","Explanation","textarea"],["medCert","Medical Certificate / Fit to Work","select",["Not Applicable","With Medical Certificate (Attached)","Presented to Company Nurse / Clinic","To Follow / Pending Clearance"]],["medClinic","Clinic / Attending Physician / Remarks (optional)","text"],["medFile","Attachment (Medical Certificate - PDF / Larawan)","file"]],sigs:["Employee","Team Leader (Recommending)","Dept. Head (Verifying)","Agency Coord. / HR (Approving)"]},
+ change_schedule:{
+  label:"Change of Schedule",
+  title:"CHANGE OF SCHEDULE FORM",
+  fields:[
+    ["deptHead","To: Department Head / Team Leader / Shift Leader","text"],
+    ["origStart","Original schedule — start time","time"],
+    ["origEnd","Original schedule — end time","time"],
+    ["propStart","Proposed schedule — start time","time"],
+    ["propEnd","Proposed schedule — end time","time"],
+    ["reason","Reason for the change","textarea"],
+    ["coWorker","Co-employee taking over the original schedule (full name)","text"]
+  ],
+  sigs:["Employee exchanging schedule","Employee taking over the schedule"]
+ }
 };
 var FK=Object.keys(FORMS);
 function vis(f){return f[0]!="ltypeOther"||data.ltype=="Other (please specify)"}
@@ -497,6 +511,61 @@ function renderSheet(){
   }).join("");
 
   var a=SET.app||{};
+
+  // Custom Narrative Layout for CHANGE OF SCHEDULE FORM (matching user's official format)
+  if(cur=="change_schedule"){
+    var appDate = dt(curReq ? curReq.filed : new Date().toISOString());
+    var agencyDisplay = direct ? "May Harvest Corporation" : (data.agency || "May Harvest Corporation");
+    var deptDisplay = data.dept || "";
+    
+    var uLine = function(val, minW, isBold){
+      var v = (val || "").trim();
+      return "<span style='display:inline-block;border-bottom:1px solid #111;min-width:"+(minW||100)+"px;padding:0 6px;text-align:center;"+(isBold?"font-weight:700;":"")+"'>"+(v ? esc(v) : "&nbsp;")+"</span>";
+    };
+
+    var coWorkerDisplay = (data.coWorker || "").trim();
+
+    var changeSchedHtml = 
+      "<div class='co'>HR Forms</div>" + dcBox() +
+      "<h2>CHANGE OF SCHEDULE FORM</h2>" +
+      "<table style='width:100%;border-collapse:collapse;font-size:13.5px;'>" +
+        "<tr><td class='k' style='width:32%;background:#f0f0f0;font-weight:600;border:1px solid #777;padding:6px 8px;'>Date of Application</td><td style='border:1px solid #777;padding:6px 8px;'>" + appDate + "</td></tr>" +
+        "<tr><td class='k' style='background:#f0f0f0;font-weight:600;border:1px solid #777;padding:6px 8px;'>Agency</td><td style='border:1px solid #777;padding:6px 8px;'>" + esc(agencyDisplay) + "</td></tr>" +
+        "<tr><td class='k' style='background:#f0f0f0;font-weight:600;border:1px solid #777;padding:6px 8px;'>Department</td><td style='border:1px solid #777;padding:6px 8px;'>" + esc(deptDisplay) + "</td></tr>" +
+      "</table>" +
+      "<div style='margin-top:24px;line-height:2.2;font-size:14px;color:#111;'>" +
+        "<div style='margin-bottom:8px;'><b>To:</b> " + uLine(data.deptHead, 160) + " <span style='font-size:13px;color:#333;'>(Department Head / Team Leader / Shift Leader)</span></div>" +
+        "<div style='margin-bottom:16px;'><b>From (Requester):</b> " + uLine(empName, 180, true) + "</div>" +
+        "<div style='margin-bottom:16px;text-indent:24px;'>" +
+          "I would like to change my schedule from " + uLine(data.origStart ? fmt("time", data.origStart) : "", 80) +
+          " to " + uLine(data.origEnd ? fmt("time", data.origEnd) : "", 80) + " (original schedule) to " +
+          uLine(data.propStart ? fmt("time", data.propStart) : "", 80) + " to " +
+          uLine(data.propEnd ? fmt("time", data.propEnd) : "", 80) + " (proposed schedule) due to " +
+          uLine(data.reason, 180) + "." +
+        "</div>" +
+        "<div style='margin-bottom:20px;text-indent:24px;'>" +
+          "I, " + uLine(coWorkerDisplay, 180, true) + " , agree to the proposed change of schedule. I promise to take over his/her original schedule." +
+        "</div>" +
+      "</div>" +
+      "<div style='display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:55px;text-align:center;font-size:12px;'>" +
+        "<div>" +
+          "<div style='min-height:20px;font-weight:700;font-size:13px;padding-bottom:2px;'>" + (empName ? esc(empName) : "&nbsp;") + "</div>" +
+          "<div style='border-top:1px solid #111;padding-top:4px;font-weight:600;'>Employee exchanging schedule</div>" +
+          "<div style='font-size:11px;color:#555;'>Signature over printed name</div>" +
+        "</div>" +
+        "<div>" +
+          "<div style='min-height:20px;font-weight:700;font-size:13px;padding-bottom:2px;'>" + (coWorkerDisplay ? esc(coWorkerDisplay) : "&nbsp;") + "</div>" +
+          "<div style='border-top:1px solid #111;padding-top:4px;font-weight:600;'>Employee taking over the schedule</div>" +
+          "<div style='font-size:11px;color:#555;'>Signature over printed name</div>" +
+        "</div>" +
+      "</div>" +
+      foot +
+      (a.code ? "<div class='note' style='text-align:right'>Generated by HR Forms — " + esc(a.code) + (a.ver ? " v" + esc(a.ver) : "") + "</div>" : "");
+
+    $("sheet").innerHTML = changeSchedHtml;
+    return;
+  }
+
   $("sheet").innerHTML="<div class='co'>HR Forms</div>"+dcBox()+"<h2>"+F.title+"</h2><table>"+rows+"</table><div class='sig'>"+sigHtml+"</div>"+foot+
    (a.code?"<div class='note' style='text-align:right'>Generated by HR Forms — "+esc(a.code)+(a.ver?" v"+esc(a.ver):"")+"</div>":"");
 }
@@ -600,8 +669,8 @@ var P=function(h){$("admin").innerHTML=h};
 
 function goStaff(){if(role()){cur=can("approvals")?"approvals":can("gate")?"gate":can("dashboard")?"dashboard":"doc";draw()}else go("login")}
 function vHome(){P("<div class='hero'><h2>Magandang araw!</h2><p>Maaari ko bang itanong kung ano ang inyong gustong gawin?</p></div><div class='opts'>"+
- [["a","Kumuha ng Undertime Slip","undertime"],["b","Kumuha ng Gate Pass","gatepass"],["c","Mag-file ng leave form","leave"],["d","Magreport at kumuha ng Admission Slip","admission"]].map(function(o){return"<button class='opt' onclick=\"go('"+o[2]+"')\"><i>"+o[0]+"</i>"+o[1]+"</button>"}).join("")+
- "<button class='opt st' onclick='goStaff()'><i>e</i>Mag-update, recommend, verify at approve ng Forms</button></div>"+
+ [["a","Kumuha ng Undertime Slip","undertime"],["b","Kumuha ng Gate Pass","gatepass"],["c","Mag-file ng leave form","leave"],["d","Magreport at kumuha ng Admission Slip","admission"],["e","Magpalit ng schedule","change_schedule"]].map(function(o){return"<button class='opt' onclick=\"go('"+o[2]+"')\"><i>"+o[0]+"</i>"+o[1]+"</button>"}).join("")+
+ "<button class='opt st' onclick='goStaff()'><i>f</i>Mag-update, recommend, verify at approve ng Forms</button></div>"+
  "<div class='panel' style='margin-top:14px'><h3>Track a request</h3><label>Reference no.</label><div class='row'><input id='trk' placeholder='HR261118-AB12'><button class='mini' onclick='track()'>Check status</button></div><div class='msg' id='trk_m'></div></div>")}
 function track(){var id=$("trk").value.trim().toUpperCase(),r=REQ.filter(function(x){return x.id==id})[0],m=$("trk_m");
  m.style.color="var(--ink)";m.innerHTML=r?esc(r.title)+" for "+esc(r.name)+": <b>"+esc(r.status)+"</b>":(DB?"No request found with that reference.":"Tracking needs a signed-in claude.ai viewer.")}
@@ -731,7 +800,7 @@ function vApprovals(){var l=scoped().filter(function(r){return canAct(r,"recomme
   (canAct(r,"recommend")?"<button class='mini' onclick=\"act('"+r.id+"','Recommended')\">Recommend</button>":"")+(canAct(r,"verify")?"<button class='mini' onclick=\"act('"+r.id+"','Verified')\">Verify</button>":"")+(canAct(r,"approve")?"<button class='mini' onclick=\"act('"+r.id+"','Approved')\">Approve</button>":"")+"<button class='mini' onclick=\"act('"+r.id+"','Rejected')\">Reject</button><button class='mini' onclick=\"openReq('"+r.id+"')\">View / Print</button>"+(r.data&&r.data.medFile&&r.data.medFile.data?"<button class='mini' onclick=\"viewReqFile('"+r.id+"','medFile')\" style='color:var(--accent);font-weight:600;'>📎 Med Cert</button>":"")+"</div></td></tr>"}).join("")||"<tr><td colspan='5' class='sm' style='padding:18px; text-align:center;'><div style='font-size:14px; font-weight:600; color:var(--ink); margin-bottom:4px;'>Walang nakabinbing request para sa inyong stage.</div><div style='color:var(--mute); font-size:12px; max-width:600px; margin:auto; line-height:1.5;'>Ang mga bagong application ay nagsisimula sa <b>Pending</b> (naghihintay ng <b>Team Leader Recommendation</b>). Pagkatapos ma-recommend, mapupunta ito sa <b>Department Head</b> para sa <b>Verification</b>, at saka lamang ito lalabas sa <b>HR / Agency</b> para sa huling <b>Approval</b>.<br><a href='javascript:go(\'status\')' style='color:var(--accent); font-weight:600; text-decoration:underline; display:inline-block; margin-top:8px;'>Tingnan ang lahat ng submitted requests sa Status tab ➔</a></div></td></tr>")+"</table></div>")}
 function hasAct(r,k){return(r.history||[]).some(function(x){return x.act==k})}
 function finalStatus(f,h){var e=h.some(function(x){return x.act=="Exit permitted"}),t=h.some(function(x){return x.act=="Return confirmed"});if(f=="undertime")return e?"Completed":"Approved";if(f=="gatepass")return t?"Completed":e?"Exited":"Approved";return"Approved"}
-function canGate(r){return r.form!="leave"&&(["Approved","Exited","Completed"].indexOf(r.status)>=0||(r.afterHours&&(r.status=="Recommended"||r.status=="Verified")))}
+function canGate(r){return r.form!="leave"&&r.form!="change_schedule"&&(["Approved","Exited","Completed"].indexOf(r.status)>=0||(r.afterHours&&(r.status=="Recommended"||r.status=="Verified")))}
 function flag(r){return r.afterHours?"<br><b style='color:#e65100'>Allowed to exit as recommended by TL</b>":""}
 function offHrs(){var h=+new Date().toLocaleString("en-GB",{timeZone:"Asia/Manila",hour:"2-digit",hour12:false})%24;return h>=17||h<8}
 function act(id,a){var r=REQ.filter(function(x){return x.id==id})[0],k={Recommended:"recommend",Verified:"verify",Approved:"approve",Rejected:"reject"}[a];if(!r||!canAct(r,k))return;

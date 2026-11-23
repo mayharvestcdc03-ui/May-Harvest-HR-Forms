@@ -1,0 +1,613 @@
+{
+  "requests": {
+    "HR261121-9W7Y": {
+      "id": "HR261121-9W7Y",
+      "data": {
+        "mi": "N",
+        "dept": "Admin",
+        "empid": "12345",
+        "first": "Ronalyn",
+        "hours": "2",
+        "sched": "15:00",
+        "agency": "May Harvest Corporation (Direct Hire)",
+        "reason": "Personal",
+        "surname": "Luza"
+      },
+      "dept": "Admin",
+      "form": "undertime",
+      "name": "Luza, Ronalyn N.",
+      "filed": "2026-11-21T03:45:09.632Z",
+      "title": "Undertime Request Form",
+      "agency": "May Harvest Corporation (Direct Hire)",
+      "status": "Rejected",
+      "history": [
+        {
+          "by": "Luza, Ronalyn N.",
+          "ts": "2026-11-21T03:45:09.632Z",
+          "act": "Submitted",
+          "role": "Applicant"
+        },
+        {
+          "by": "System Administrator",
+          "ts": "2026-11-21T03:46:34.392Z",
+          "act": "Rejected",
+          "role": "Administrator",
+          "remark": ""
+        }
+      ]
+    },
+    "HR261121-BKJC": {
+      "id": "HR261121-BKJC",
+      "data": {
+        "mi": "N",
+        "dept": "Admin",
+        "empid": "123456",
+        "first": "Ronalyn",
+        "hours": "2",
+        "sched": "15:00",
+        "agency": "May Harvest Corporation (Direct Hire)",
+        "reason": "Personal",
+        "surname": "Luza"
+      },
+      "dept": "Admin",
+      "form": "undertime",
+      "name": "Luza, Ronalyn N.",
+      "filed": "2026-11-21T03:43:36.432Z",
+      "title": "Undertime Request Form",
+      "agency": "May Harvest Corporation (Direct Hire)",
+      "status": "Rejected",
+      "history": [
+        {
+          "by": "Luza, Ronalyn N.",
+          "ts": "2026-11-21T03:43:36.432Z",
+          "act": "Submitted",
+          "role": "Applicant"
+        },
+        {
+          "by": "System Administrator",
+          "ts": "2026-11-21T03:46:35.072Z",
+          "act": "Rejected",
+          "role": "Administrator",
+          "remark": ""
+        }
+      ]
+    },
+    "HR261121-CK7J": {
+      "id": "HR261121-CK7J",
+      "data": {
+        "mi": "N.",
+        "dept": "Admin",
+        "empid": "08853",
+        "first": "Ronalyn",
+        "hours": "2 Hours",
+        "sched": "15:00",
+        "agency": "May Harvest Corporation (Direct Hire)",
+        "reason": "Personal",
+        "surname": "Luza"
+      },
+      "dept": "Admin",
+      "form": "undertime",
+      "name": "Luza, Ronalyn N.",
+      "filed": "2026-11-21T03:24:17.383Z",
+      "title": "Undertime Request Form",
+      "agency": "May Harvest Corporation (Direct Hire)",
+      "status": "Rejected",
+      "history": [
+        {
+          "by": "Luza, Ronalyn N.",
+          "ts": "2026-11-21T03:24:17.383Z",
+          "act": "Submitted",
+          "role": "Applicant"
+        },
+        {
+          "by": "System Administrator",
+          "ts": "2026-11-21T03:46:29.976Z",
+          "act": "Rejected",
+          "role": "Administrator",
+          "remark": ""
+        }
+      ]
+    },
+    "HR261121-J7IU": {
+      "id": "HR261121-J7IU",
+      "data": {
+        "mi": "N",
+        "dept": "Admin",
+        "empid": "123456",
+        "first": "Ronalyn",
+        "hours": "2",
+        "sched": "15:00",
+        "agency": "May Harvest Corporation (Direct Hire)",
+        "reason": "Personal",
+        "surname": "Luza"
+      },
+      "dept": "Admin",
+      "form": "undertime",
+      "name": "Luza, Ronalyn N.",
+      "filed": "2026-11-21T03:43:40.080Z",
+      "title": "Undertime Request Form",
+      "agency": "May Harvest Corporation (Direct Hire)",
+      "status": "Approved",
+      "history": [
+        {
+          "by": "Luza, Ronalyn N.",
+          "ts": "2026-11-21T03:43:40.080Z",
+          "act": "Submitted",
+          "role": "Applicant"
+        },
+        {
+          "by": "System Administrator",
+          "ts": "2026-11-21T03:46:36.464Z",
+          "act": "Recommended",
+          "role": "Administrator",
+          "remark": ""
+        },
+        {
+          "by": "System Administrator",
+          "ts": "2026-11-21T03:46:51.712Z",
+          "act": "Verified",
+          "role": "Administrator",
+          "remark": ""
+        },
+        {
+          "by": "System Administrator",
+          "ts": "2026-11-21T03:46:54.632Z",
+          "act": "Approved",
+          "role": "Administrator",
+          "remark": ""
+        }
+      ]
+    },
+    "HR261121-JRG2": {
+      "id": "HR261121-JRG2",
+      "data": {
+        "mi": "",
+        "dept": "Admin",
+        "empid": "05648",
+        "first": "Francisco",
+        "hours": "2",
+        "sched": "15:00",
+        "agency": "May Harvest Corporation (Direct Hire)",
+        "reason": "Not feeling well",
+        "surname": "Joshua"
+      },
+      "dept": "Admin",
+      "form": "undertime",
+      "name": "Joshua, Francisco",
+      "filed": "2026-11-21T03:39:31.424Z",
+      "title": "Undertime Request Form",
+      "agency": "May Harvest Corporation (Direct Hire)",
+      "status": "Rejected",
+      "history": [
+        {
+          "by": "Joshua, Francisco",
+          "ts": "2026-11-21T03:39:31.424Z",
+          "act": "Submitted",
+          "role": "Applicant"
+        },
+        {
+          "by": "System Administrator",
+          "ts": "2026-11-21T03:46:32.160Z",
+          "act": "Rejected",
+          "role": "Administrator",
+          "remark": ""
+        }
+      ]
+    },
+    "HR261121-PNPF": {
+      "id": "HR261121-PNPF",
+      "data": {
+        "dept": "Basic",
+        "first": "Geraldine",
+        "agency": "May Harvest Corporation (Direct Hire)",
+        "surname": "Mendoza"
+      },
+      "dept": "Basic",
+      "form": "undertime",
+      "name": "Mendoza, Geraldine",
+      "filed": "2026-11-21T04:10:07.992Z",
+      "title": "Undertime Request Form",
+      "agency": "May Harvest Corporation (Direct Hire)",
+      "status": "Pending",
+      "history": [
+        {
+          "by": "Mendoza, Geraldine",
+          "ts": "2026-11-21T04:10:07.992Z",
+          "act": "Submitted",
+          "role": "Applicant"
+        }
+      ]
+    },
+    "HR261121-Q2TB": {
+      "id": "HR261121-Q2TB",
+      "data": {
+        "mi": "N.",
+        "dept": "Admin",
+        "empid": "08853",
+        "first": "Ronalyn",
+        "hours": "2 Hours",
+        "sched": "15:00",
+        "agency": "May Harvest Corporation (Direct Hire)",
+        "reason": "Personal matter",
+        "surname": "Luza"
+      },
+      "dept": "Admin",
+      "form": "undertime",
+      "name": "Luza, Ronalyn N.",
+      "filed": "2026-11-21T03:08:37.711Z",
+      "title": "Undertime Request Form",
+      "agency": "May Harvest Corporation (Direct Hire)",
+      "status": "Rejected",
+      "history": [
+        {
+          "by": "Luza, Ronalyn N.",
+          "ts": "2026-11-21T03:08:37.711Z",
+          "act": "Submitted",
+          "role": "Applicant"
+        },
+        {
+          "by": "System Administrator",
+          "ts": "2026-11-21T03:46:26.768Z",
+          "act": "Rejected",
+          "role": "Administrator",
+          "remark": ""
+        }
+      ]
+    },
+    "HR261121-TQB5": {
+      "id": "HR261121-TQB5",
+      "data": {
+        "dept": "Basic",
+        "first": "Geraldine",
+        "hours": "2",
+        "sched": "14:10",
+        "agency": "May Harvest Corporation (Direct Hire)",
+        "reason": "uuwi sa bahay",
+        "surname": "Mendoza"
+      },
+      "dept": "Basic",
+      "form": "undertime",
+      "name": "Mendoza, Geraldine",
+      "filed": "2026-11-21T04:10:28.167Z",
+      "title": "Undertime Request Form",
+      "agency": "May Harvest Corporation (Direct Hire)",
+      "status": "Pending",
+      "history": [
+        {
+          "by": "Mendoza, Geraldine",
+          "ts": "2026-11-21T04:10:28.167Z",
+          "act": "Submitted",
+          "role": "Applicant"
+        }
+      ]
+    },
+    "HR261121-XQXZ": {
+      "id": "HR261121-XQXZ",
+      "data": {
+        "mi": "N.",
+        "dept": "Admin",
+        "empid": "08853",
+        "first": "Luza",
+        "hours": "2",
+        "sched": "15:00",
+        "agency": "May Harvest Corporation (Direct Hire)",
+        "reason": "Personal",
+        "surname": "Ronalyn"
+      },
+      "dept": "Admin",
+      "form": "undertime",
+      "name": "Ronalyn, Luza N.",
+      "filed": "2026-11-21T03:38:55.512Z",
+      "title": "Undertime Request Form",
+      "agency": "May Harvest Corporation (Direct Hire)",
+      "status": "Rejected",
+      "history": [
+        {
+          "by": "Ronalyn, Luza N.",
+          "ts": "2026-11-21T03:38:55.512Z",
+          "act": "Submitted",
+          "role": "Applicant"
+        },
+        {
+          "by": "System Administrator",
+          "ts": "2026-11-21T03:46:31.152Z",
+          "act": "Rejected",
+          "role": "Administrator",
+          "remark": ""
+        }
+      ]
+    },
+    "HR261121-XRIZ": {
+      "id": "HR261121-XRIZ",
+      "data": {
+        "dept": "Basic",
+        "first": "Geraldine",
+        "sched": "14:10",
+        "agency": "May Harvest Corporation (Direct Hire)",
+        "surname": "Mendoza"
+      },
+      "dept": "Basic",
+      "form": "undertime",
+      "name": "Mendoza, Geraldine",
+      "filed": "2026-11-21T04:10:13.925Z",
+      "title": "Undertime Request Form",
+      "agency": "May Harvest Corporation (Direct Hire)",
+      "status": "Pending",
+      "history": [
+        {
+          "by": "Mendoza, Geraldine",
+          "ts": "2026-11-21T04:10:13.925Z",
+          "act": "Submitted",
+          "role": "Applicant"
+        }
+      ]
+    }
+  },
+  "accounts": {
+    "hr": {
+      "created": "2026-11-23T08:46:51.394Z",
+      "id": "hr",
+      "name": "HR Department",
+      "role": "HR",
+      "scope": "",
+      "salt": "6b42caef099d2b83",
+      "hash": "98e179056b9d7949f43fd29157328ea020efca1cd04a5508e478970ccf6a9116"
+    },
+    "lead": {
+      "created": "2026-11-23T08:46:51.394Z",
+      "id": "lead",
+      "name": "Team Leader",
+      "role": "Team Leader",
+      "scope": "Production",
+      "salt": "4e8911ce6b9455f5",
+      "hash": "b2386e010a561486f6b31a8675fb71f1deb663df49f909f60493b2dca5963f9b"
+    },
+    "admin": {
+      "created": "2026-11-23T08:46:51.394Z",
+      "id": "admin",
+      "name": "System Administrator",
+      "role": "Administrator",
+      "scope": "",
+      "salt": "a7d89d6edec53909",
+      "hash": "607105fe5569ba3c1686162925e1e6d8427e3da2c3783a50e61323d2826f811b"
+    },
+    "guard": {
+      "created": "2026-11-23T08:46:51.394Z",
+      "id": "guard",
+      "name": "Security Guard on Duty",
+      "role": "Guard on Duty",
+      "scope": "",
+      "salt": "09ea856ae5fc4120",
+      "hash": "840f7816b48910f89861712b410827083d480cea78eeff343642b887db3d9a6b"
+    },
+    "agency": {
+      "created": "2026-11-23T08:46:51.394Z",
+      "id": "agency",
+      "name": "Workbridge Agency Coordinator",
+      "role": "Agency Coordinator",
+      "scope": "Workbridge Corporation",
+      "salt": "132a9b7586a08901",
+      "hash": "a0fa4a17e203083ded53d9d869a8f7ba3db31c2d6fcb4a73b3e31f7f18efc5f0"
+    },
+    "depthead": {
+      "created": "2026-11-23T08:46:51.394Z",
+      "id": "depthead",
+      "name": "Department Head",
+      "role": "Department Head",
+      "scope": "Production",
+      "salt": "903266d0790479ef",
+      "hash": "026e254b4ea3331259aa91f4283ba32916b79d80e04d0b3089ea5a451a7c598c"
+    },
+    "doccontrol": {
+      "created": "2026-11-23T08:46:51.394Z",
+      "id": "doccontrol",
+      "name": "Document Control Officer",
+      "role": "Document Control",
+      "scope": "",
+      "salt": "e20349742ca1b4b6",
+      "hash": "45f5fa7704d117cfaf4891931d12040508195f2609ecc9b098588e0712eacd54"
+    },
+    "opsmanager": {
+      "created": "2026-11-23T08:46:51.394Z",
+      "id": "opsmanager",
+      "name": "Operations Manager",
+      "role": "Operations Manager",
+      "scope": "",
+      "salt": "0f9f7ee77cf6bed6",
+      "hash": "d8c830d25ed70b4547fb5937d6914e7d705d83634a3528086c3c0ff0b6347ca1"
+    }
+  },
+  "audit": [
+    {
+      "by": "Applicant",
+      "id": "1795234228170-186v",
+      "ts": "2026-11-21T04:10:28.170Z",
+      "act": "Submitted Undertime Request Form",
+      "ref": "HR261121-TQB5"
+    },
+    {
+      "by": "Applicant",
+      "id": "1795234213928-gro5",
+      "ts": "2026-11-21T04:10:13.928Z",
+      "act": "Submitted Undertime Request Form",
+      "ref": "HR261121-XRIZ"
+    },
+    {
+      "by": "Applicant",
+      "id": "1795234207995-8elu",
+      "ts": "2026-11-21T04:10:07.995Z",
+      "act": "Submitted Undertime Request Form",
+      "ref": "HR261121-PNPF"
+    },
+    {
+      "by": "System Administrator (Administrator)",
+      "id": "1795232814633-cech",
+      "ts": "2026-11-21T03:46:54.633Z",
+      "act": "Approved Undertime Request Form",
+      "ref": "HR261121-J7IU"
+    },
+    {
+      "by": "System Administrator (Administrator)",
+      "id": "1795232811713-av8w",
+      "ts": "2026-11-21T03:46:51.713Z",
+      "act": "Verified Undertime Request Form",
+      "ref": "HR261121-J7IU"
+    },
+    {
+      "by": "System Administrator (Administrator)",
+      "id": "1795232796465-y6z2",
+      "ts": "2026-11-21T03:46:36.465Z",
+      "act": "Recommended Undertime Request Form",
+      "ref": "HR261121-J7IU"
+    },
+    {
+      "by": "System Administrator (Administrator)",
+      "id": "1795232795073-7das",
+      "ts": "2026-11-21T03:46:35.073Z",
+      "act": "Rejected Undertime Request Form",
+      "ref": "HR261121-BKJC"
+    },
+    {
+      "by": "System Administrator (Administrator)",
+      "id": "1795232794393-c80k",
+      "ts": "2026-11-21T03:46:34.393Z",
+      "act": "Rejected Undertime Request Form",
+      "ref": "HR261121-9W7Y"
+    },
+    {
+      "by": "System Administrator (Administrator)",
+      "id": "1795232792161-hh3k",
+      "ts": "2026-11-21T03:46:32.161Z",
+      "act": "Rejected Undertime Request Form",
+      "ref": "HR261121-JRG2"
+    },
+    {
+      "by": "System Administrator (Administrator)",
+      "id": "1795232791153-39vd",
+      "ts": "2026-11-21T03:46:31.153Z",
+      "act": "Rejected Undertime Request Form",
+      "ref": "HR261121-XQXZ"
+    },
+    {
+      "by": "System Administrator (Administrator)",
+      "id": "1795232789977-9qar",
+      "ts": "2026-11-21T03:46:29.977Z",
+      "act": "Rejected Undertime Request Form",
+      "ref": "HR261121-CK7J"
+    },
+    {
+      "by": "System Administrator (Administrator)",
+      "id": "1795232786769-kwvu",
+      "ts": "2026-11-21T03:46:26.769Z",
+      "act": "Rejected Undertime Request Form",
+      "ref": "HR261121-Q2TB"
+    },
+    {
+      "by": "System Administrator (Administrator)",
+      "id": "1795232776136-h0b9",
+      "ts": "2026-11-21T03:46:16.136Z",
+      "act": "Login",
+      "ref": "admin"
+    },
+    {
+      "by": "Department Head (Department Head)",
+      "id": "1795232748760-b078",
+      "ts": "2026-11-21T03:45:48.760Z",
+      "act": "Logout",
+      "ref": "depthead"
+    },
+    {
+      "by": "Department Head (Department Head)",
+      "id": "1795232709633-dklz",
+      "ts": "2026-11-21T03:45:09.633Z",
+      "act": "Submitted Undertime Request Form",
+      "ref": "HR261121-9W7Y"
+    },
+    {
+      "by": "Department Head (Department Head)",
+      "id": "1795232620082-hldj",
+      "ts": "2026-11-21T03:43:40.082Z",
+      "act": "Submitted Undertime Request Form",
+      "ref": "HR261121-J7IU"
+    },
+    {
+      "by": "Department Head (Department Head)",
+      "id": "1795232616433-knbo",
+      "ts": "2026-11-21T03:43:36.433Z",
+      "act": "Submitted Undertime Request Form",
+      "ref": "HR261121-BKJC"
+    },
+    {
+      "by": "Department Head (Department Head)",
+      "id": "1795232371425-ck9b",
+      "ts": "2026-11-21T03:39:31.425Z",
+      "act": "Submitted Undertime Request Form",
+      "ref": "HR261121-JRG2"
+    },
+    {
+      "by": "Department Head (Department Head)",
+      "id": "1795232335514-rem6",
+      "ts": "2026-11-21T03:38:55.514Z",
+      "act": "Submitted Undertime Request Form",
+      "ref": "HR261121-XQXZ"
+    },
+    {
+      "by": "Department Head (Department Head)",
+      "id": "1795232306336-qgr6",
+      "ts": "2026-11-21T03:38:26.336Z",
+      "act": "Login",
+      "ref": "depthead"
+    },
+    {
+      "by": "Department Head (Department Head)",
+      "id": "1795231509535-1ig9",
+      "ts": "2026-11-21T03:25:09.536Z",
+      "act": "Login",
+      "ref": "depthead"
+    },
+    {
+      "by": "Team Leader (Team Leader)",
+      "id": "1795231484727-687g",
+      "ts": "2026-11-21T03:24:44.727Z",
+      "act": "Logout",
+      "ref": "lead"
+    },
+    {
+      "by": "Team Leader (Team Leader)",
+      "id": "1795231457387-kkhj",
+      "ts": "2026-11-21T03:24:17.387Z",
+      "act": "Submitted Undertime Request Form",
+      "ref": "HR261121-CK7J"
+    },
+    {
+      "by": "Team Leader (Team Leader)",
+      "id": "1795231424392-5m24",
+      "ts": "2026-11-21T03:23:44.392Z",
+      "act": "Login",
+      "ref": "lead"
+    },
+    {
+      "by": "Applicant",
+      "id": "1795230517712-4vsi",
+      "ts": "2026-11-21T03:08:37.712Z",
+      "act": "Submitted Undertime Request Form",
+      "ref": "HR261121-Q2TB"
+    },
+    {
+      "by": "Security Guard on Duty (Guard on Duty)",
+      "id": "1795230450039-9b9e",
+      "ts": "2026-11-21T03:07:30.039Z",
+      "act": "Login",
+      "ref": "guard"
+    },
+    {
+      "by": "Security Guard on Duty (Guard on Duty)",
+      "id": "1795230174503-xuod",
+      "ts": "2026-11-21T03:02:54.503Z",
+      "act": "Login",
+      "ref": "guard"
+    }
+  ],
+  "settings": {},
+  "lastUpdated": "2026-11-23T08:46:52.277Z"
+}
